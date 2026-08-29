@@ -4,5 +4,5 @@ using MediatR;
 
 namespace Application.Services.Product.Commands.Categories
 {
-    public record UpdateCategoryCommand(Guid Id, UpdateCategoryRequestDto Categorymodel) : IRequest<ServicesResponse>;
+    public record UpdateCategoryCommand(UpdateCategoryRequestDto Categorymodel) : IRequest<ServicesResponse>;
 }

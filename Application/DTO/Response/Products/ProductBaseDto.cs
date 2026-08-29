@@ -8,11 +8,9 @@ namespace Application.DTO.Response.Products
         [Required]
         public string Name { get; set; }
 
-        [NetcodeHubRequiredGuid(ErrorMessage = "Product Location is required")]
         [RegularExpression(@"^[{(]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[)}]?$")]
         public Guid LocationId { get; set; }
 
-        [NetcodeHubRequiredGuid(ErrorMessage = "Product Category is required")]
         [RegularExpression(@"^[{(]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[)}]?$")]
         public Guid CategoryId { get; set; }
         public string Description { get; set; }
@@ -22,6 +20,7 @@ namespace Application.DTO.Response.Products
         [Required]
         [Range(1, int.MaxValue)]
         public int Quantity { get; set; }
+        public DateTime DateAdd { get; set; }
 
         [Required]
         [DataType(DataType.Currency)]

@@ -7,6 +7,7 @@
         public Guid CategoryId { get; set; }
         public Guid LocationId { get; set; }
         public decimal Price { get; set; }
+        public DateTime DateAdd {get; set; }    
         public int Quantity { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;

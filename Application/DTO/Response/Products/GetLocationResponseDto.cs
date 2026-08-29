@@ -1,7 +1,9 @@
-﻿namespace Application.DTO.Response.Products
+﻿using Application.DTO.Request.Product;
+
+namespace Application.DTO.Response.Products
 {
-    public class GetLocationResponseDto
+    public class GetLocationResponseDto:UpdateLocationRequestDto
     {
-        public virtual ICollection<GetProductResponseDto> Products { get; set; }
+        public IEnumerable<GetProductResponseDto> Products { get; set; }
     }
 }

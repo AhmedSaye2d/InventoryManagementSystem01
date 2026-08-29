@@ -1,5 +1,5 @@
-﻿namespace Application.DTO.Response
+namespace Application.DTO.Response
 {
-    public class ServicesResponse(bool Flag, string Message = null!);
+    public record ServicesResponse(bool Flag, string Message = null!);
 
 }

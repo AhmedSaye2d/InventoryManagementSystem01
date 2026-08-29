@@ -7,3 +7,4 @@ namespace Application.Services.Product.Commands.Categories
     public record CreateCategoryCommand(AddCategoryRequestDto Categorymodel) : IRequest<ServicesResponse>;
 
 }
+ 

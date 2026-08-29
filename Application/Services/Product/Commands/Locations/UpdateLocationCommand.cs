@@ -1,8 +1,10 @@
-﻿using Application.DTO.Response;
+﻿using Application.DTO.Request.Product;
+using Application.DTO.Response;
+using MediatR;
 
 namespace Application.Services.Product.Commands.Locations
 {
-    public record UpdateLocationCommand(Guid Id) : MediatR.IRequest<ServicesResponse>
+    public record UpdateLocationCommand(UpdateLocationRequestDto LocationModel) : IRequest<ServicesResponse>
     {
     }
 }
