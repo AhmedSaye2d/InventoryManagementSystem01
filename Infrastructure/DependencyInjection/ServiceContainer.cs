@@ -1,12 +1,15 @@
+using System.Text;
 using Application.Extention.Identity;
 using Application.Interface.ActivityTracker;
 using Application.Interface.Identity;
 using Infrastructure.DataAccess;
 using Infrastructure.Reposito;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.DependencyInjection
 {
@@ -20,10 +23,23 @@ namespace Infrastructure.DependencyInjection
 
             services.AddAuthentication(options =>
             {
-                options.DefaultScheme = IdentityConstants.ApplicationScheme;
-                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddIdentityCookies();
+            .AddJwtBearer(options =>
+            {
+                var key = configuration["Jwt:Key"] ?? "DefaultSuperSecretKey1234567890123456!";
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"] ?? "InventoryApi",
+                    ValidAudience = configuration["Jwt:Audience"] ?? "InventoryClient",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+                };
+            });
 
             // 🔹 Identity
             services.AddIdentityCore<ApplicationUser>()
@@ -34,7 +50,12 @@ namespace Infrastructure.DependencyInjection
 
             // 🔹 Authorization (Policies)
             services.AddAuthorizationBuilder()
-                .AddPolicy("AdministrationPolicy", policy =>
+                .AddPolicy("AdminPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireRole("Admin");
+                })
+                .AddPolicy("ManagerPolicy", policy =>
                 {
                     policy.RequireAuthenticatedUser();
                     policy.RequireRole("Admin", "Manager");
@@ -42,7 +63,30 @@ namespace Infrastructure.DependencyInjection
                 .AddPolicy("UserPolicy", policy =>
                 {
                     policy.RequireAuthenticatedUser();
-                    policy.RequireRole("User");
+                })
+                .AddPolicy("CreatePolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireAssertion(ctx => ctx.User.HasClaim("create", "true") || ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Manager"));
+                })
+                .AddPolicy("UpdatePolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireAssertion(ctx => ctx.User.HasClaim("update", "true") || ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Manager"));
+                })
+                .AddPolicy("DeletePolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireAssertion(ctx => ctx.User.HasClaim("delete", "true") || ctx.User.IsInRole("Admin"));
+                })
+                .AddPolicy("ReadPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                })
+                .AddPolicy("ManageUserPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireAssertion(ctx => ctx.User.HasClaim("MangerUser", "true") || ctx.User.IsInRole("Admin"));
                 });
 
             // 🔹 Services

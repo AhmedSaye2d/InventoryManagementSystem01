@@ -1,4 +1,4 @@
-﻿namespace Domain.Entities.Order
+namespace Domain.Entities.Order
 {
     public class Order
     {
@@ -11,5 +11,15 @@
         public decimal Price { get; set; }
         public string OrderStatus { get; set; } = string.Empty;
         public int Quantity { get; set; }
+    }
+
+    public static class OrderStatus
+    {
+        public const string Pending = "Pending";
+        public const string Processing = "Processing";
+        public const string Delivering = "Delivering";
+        public const string Delivered = "Delivered";
+        public const string Cancelled = "Cancelled";
+        public const string cancel = "Cancelled";
     }
 }

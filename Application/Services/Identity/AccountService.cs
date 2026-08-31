@@ -1,7 +1,8 @@
-﻿using Application.DTO.Request.ActivityTracker;
+using Application.DTO.Request.ActivityTracker;
 using Application.DTO.Request.Identity;
 using Application.DTO.Response;
 using Application.DTO.Response.Activity;
+using Application.DTO.Response.Identity;
 using Application.Interface.Identity;
 
 namespace Application.Services.Identity
@@ -25,7 +26,7 @@ namespace Application.Services.Identity
 
         }
 
-        public async Task<ServicesResponse> Login(LoginUserRequestDto model)
+        public async Task<LoginResponseDto> Login(LoginUserRequestDto model)
         {
             return await account.LoginAsAsync(model);
         }

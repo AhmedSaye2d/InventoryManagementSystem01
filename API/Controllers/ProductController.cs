@@ -2,12 +2,14 @@ using Application.DTO.Request.Product;
 using Application.Services.Product.Commands.Products;
 using Application.Services.Product.Queries.Products;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -19,6 +21,7 @@ namespace API.Controllers
 
         // GET: api/product
         [HttpGet]
+        [Authorize(Policy = "ReadPolicy")]
         public async Task<IActionResult> GetAllProducts()
         {
             var response = await _mediator.Send(new GetProductQuery());
@@ -27,6 +30,7 @@ namespace API.Controllers
 
         // GET: api/product/{id}
         [HttpGet("{id:guid}")]
+        [Authorize(Policy = "ReadPolicy")]
         public async Task<IActionResult> GetProductById(Guid id)
         {
             var response = await _mediator.Send(new GetProductByIdQuery(id));
@@ -36,6 +40,7 @@ namespace API.Controllers
 
         // POST: api/product
         [HttpPost]
+        [Authorize(Policy = "CreatePolicy")]
         public async Task<IActionResult> CreateProduct([FromBody] AddProductRequestDto dto)
         {
             var response = await _mediator.Send(new CreateProductCommand(dto));
@@ -46,6 +51,7 @@ namespace API.Controllers
 
         // PUT: api/product/{id}
         [HttpPut("{id:guid}")]
+        [Authorize(Policy = "UpdatePolicy")]
         public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductRequestDto dto)
         {
             var response = await _mediator.Send(new UpdateProductCommand(id, dto));
@@ -56,6 +62,7 @@ namespace API.Controllers
 
         // DELETE: api/product/{id}
         [HttpDelete("{id:guid}")]
+        [Authorize(Policy = "DeletePolicy")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
             var response = await _mediator.Send(new DeleteProductCommand(id));

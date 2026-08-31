@@ -1,13 +1,14 @@
-﻿using Application.DTO.Request.ActivityTracker;
+using Application.DTO.Request.ActivityTracker;
 using Application.DTO.Request.Identity;
 using Application.DTO.Response;
 using Application.DTO.Response.Activity;
+using Application.DTO.Response.Identity;
 
 namespace Application.Services.Identity
 {
     public interface IAccountService
     {
-        Task<ServicesResponse> Login(LoginUserRequestDto model);
+        Task<LoginResponseDto> Login(LoginUserRequestDto model);
         Task<ServicesResponse> CreateUserAsync(CreateUserRequestDto model);
         Task<ServicesResponse> UpdateUserAsync(ChangeUserClaimRequestDto model);
         Task SetUPAsync();

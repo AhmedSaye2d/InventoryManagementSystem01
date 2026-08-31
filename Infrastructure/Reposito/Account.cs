@@ -1,3 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Application.DTO.Request.ActivityTracker;
 using Application.DTO.Request.Identity;
 using Application.DTO.Response;
@@ -10,7 +13,8 @@ using Infrastructure.DataAccess;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Reposito
 {
@@ -18,7 +22,8 @@ namespace Infrastructure.Reposito
         UserManager<ApplicationUser> userManager,
         AppDbContext context,
         SignInManager<ApplicationUser> signInManager,
-        RoleManager<IdentityRole> roleManager) : IAccount
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration) : IAccount
     {
         public async Task<ServicesResponse> CreateUserAsync(CreateUserRequestDto model)
         {
@@ -132,24 +137,43 @@ namespace Infrastructure.Reposito
             return list;
         }
 
-        public async Task<ServicesResponse> LoginAsAsync(LoginUserRequestDto model)
+        public async Task<LoginResponseDto> LoginAsAsync(LoginUserRequestDto model)
         {
             var user = await FindUserByEmailAsync(model.Email);
             if (user == null)
             {
-                return new ServicesResponse(false, "User not found.");
+                return new LoginResponseDto(false, Message: "User not found.");
             }
             var verify = await signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!verify.Succeeded)
             {
-                return new ServicesResponse(false, "Invalid password.");
+                return new LoginResponseDto(false, Message: "Invalid password.");
             }
-            var res = await signInManager.PasswordSignInAsync(user, model.Password, false, false);
-            if (!res.Succeeded)
+
+            var claims = await userManager.GetClaimsAsync(user);
+            var userClaims = new List<Claim>
             {
-                return new ServicesResponse(false, "Login failed.");
-            }
-            return new ServicesResponse(true, "Login successful.");
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Name, user.Name ?? user.UserName ?? string.Empty)
+            };
+            userClaims.AddRange(claims);
+
+            var keyString = configuration["Jwt:Key"] ?? "DefaultSuperSecretKey1234567890123456!";
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: configuration["Jwt:Issuer"] ?? "InventoryApi",
+                audience: configuration["Jwt:Audience"] ?? "InventoryClient",
+                claims: userClaims,
+                expires: DateTime.UtcNow.AddDays(1),
+                signingCredentials: creds
+            );
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return new LoginResponseDto(true, Token: tokenString, Message: "Login successful.");
         }
 
         public async Task SetUpAsync()

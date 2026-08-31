@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Reposito\Order\" />
     <Folder Include="Reposito\Product\Handlers\Category\" />
   </ItemGroup>
 
