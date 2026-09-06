@@ -1,5 +1,6 @@
 using Domain.Entities.Product;
 using Infrastructure.DataAccess;
+using Infrastructure.UnitOfWork;
 using Infrastructure.Reposito.Product.Handlers.Products;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -24,7 +25,8 @@ namespace Testing.ProductTest
                 .Options;
 
             using var context = new AppDbContext(options);
-            var handler = new CreateProductHandler(context);
+            var unitOfWork = new UnitOfWork(context);
+            var handler = new CreateProductHandler(unitOfWork);
 
             var command = new CreateProductCommand(new AddProductRequestDto
             {

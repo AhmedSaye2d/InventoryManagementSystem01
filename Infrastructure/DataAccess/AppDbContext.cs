@@ -1,5 +1,6 @@
 using Application.Extention.Identity;
 using Domain.Entities.ActivityTracker;
+using Domain.Entities.Inventory;
 using Domain.Entities.Order;
 using Domain.Entities.Product;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -19,6 +20,7 @@ namespace Infrastructure.DataAccess
         public DbSet<Category> Categories { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<InventoryMovement> InventoryMovements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

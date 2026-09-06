@@ -1,23 +1,25 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Order.Commands;
 using Domain.Entities.Order;
-using Infrastructure.DataAccess;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Reposito.Order
 {
     public class CancelOrderHandle : IRequestHandler<CancelOrderCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
-        public CancelOrderHandle(AppDbContext context)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public CancelOrderHandle(IUnitOfWork unitOfWork)
         {
-            this._context = context;
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ServicesResponse> Handle(CancelOrderCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var order = await _context.Orders.Where(c => c.Id == request.orderId).FirstOrDefaultAsync(cancellationToken);
+                var order = await _unitOfWork.Orders.GetByIdAsync(request.orderId);
 
                 if (order == null)
                 {
@@ -25,9 +27,9 @@ namespace Infrastructure.Reposito.Order
                 }
                 order.OrderStatus = OrderStatus.cancel;
 
-                await _context.SaveChangesAsync(cancellationToken);
+                _unitOfWork.Orders.Update(order);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return new ServicesResponse(true, "order cancel successfully");
-
             }
             catch (Exception ex)
             {

@@ -1,36 +1,38 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Locations;
-using Infrastructure.DataAccess;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Reposito.Product.Handlers.Location
 {
     public class DeleteLocationHandler : IRequestHandler<DeleteLocationCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
-        public DeleteLocationHandler(AppDbContext context)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public DeleteLocationHandler(IUnitOfWork unitOfWork)
         {
-            this._context = context;    
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ServicesResponse> Handle(DeleteLocationCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var location = await _context.Locations.FirstOrDefaultAsync(x => x.Id.Equals(request.Id), cancellationToken: cancellationToken);
+                var location = await _unitOfWork.Locations.GetByIdAsync(request.Id);
 
                 if (location == null)
                 {
                     return GeneralDbResponses.ItemNotFound("location");
                 }
-                _context.Locations.Remove(location);
 
-                await _context.SaveChangesAsync(cancellationToken);
+                _unitOfWork.Locations.Delete(location);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemDeleted(location.Name);
             }
             catch (Exception ex)
             {
-                return new ServicesResponse(true, ex.Message);
+                return new ServicesResponse(false, ex.Message);
             }
         }
     }

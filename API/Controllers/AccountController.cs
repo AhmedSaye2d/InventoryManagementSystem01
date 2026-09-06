@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Application.DTO.Request.ActivityTracker;
 using Application.DTO.Request.Identity;
 using Application.Services.Identity;
@@ -28,9 +29,10 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        // POST: api/account/create
+
+        // POST: api/account/create - Admin only
         [HttpPost("create")]
-        [Authorize(Policy = "ManageUserPolicy")]
+        [Authorize(Policy = "AdminPolicy")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDto dto)
         {
             var response = await _accountService.CreateUserAsync(dto);
@@ -39,7 +41,16 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        // POST: api/account/identity/setup
+        // GET: api/account/users - Admin only
+        [HttpGet("users")]
+        [Authorize(Policy = "AdminPolicy")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var response = await _accountService.GetUsersAsync();
+            return Ok(response);
+        }
+
+        // POST: api/account/identity/setup - Idempotent bootstrap, AllowAnonymous but safe
         [HttpPost("identity/setup")]
         [AllowAnonymous]
         public async Task<IActionResult> Setup()
@@ -48,9 +59,9 @@ namespace API.Controllers
             return Ok("Identity setup completed successfully.");
         }
 
-        // PUT: api/account/update-claims
+        // PUT: api/account/update-claims - Admin only
         [HttpPut("update-claims")]
-        [Authorize(Policy = "ManageUserPolicy")]
+        [Authorize(Policy = "AdminPolicy")]
         public async Task<IActionResult> UpdateUserClaims([FromBody] ChangeUserClaimRequestDto dto)
         {
             var response = await _accountService.UpdateUserAsync(dto);
@@ -68,12 +79,15 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        // POST: api/account/activity
+        // POST: api/account/activity - UserId is taken from JWT, not from client DTO
         [HttpPost("activity")]
         [Authorize]
         public async Task<IActionResult> SaveActivity([FromBody] ActivityTrackerRequestDto dto)
         {
-            await _accountService.SaveActivityTracker(dto);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                      ?? User.FindFirstValue(ClaimTypes.Email)
+                      ?? "system";
+            await _accountService.SaveActivityTracker(dto, userId);
             return Ok("Activity saved successfully.");
         }
     }

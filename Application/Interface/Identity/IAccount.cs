@@ -13,7 +13,7 @@ namespace Application.Interface.Identity
         Task<IEnumerable<GetUserWithClaimResponsDto>> GetUserWithClaimAsync();
         Task SetUpAsync();
         Task<ServicesResponse> UpdateAsync(ChangeUserClaimRequestDto model);
-        Task SaveActityTrackerAsync(ActivityTrackerRequestDto model);
+        Task SaveActityTrackerAsync(ActivityTrackerRequestDto model, string authenticatedUserId);
         Task<IEnumerable<ActivityTrackerResponseDto>> GetActivityTrackerAsync();
     }
 }

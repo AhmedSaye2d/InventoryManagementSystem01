@@ -1,26 +1,22 @@
 using Application.DTO.Response.Products;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Queries.Products;
-using Infrastructure.DataAccess;
-using LocationEntity = global::Domain.Entities.Product.Location;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Reposito.Product.Handlers.Product
 {
     public class GetProductHandler : IRequestHandler<GetProductQuery, IEnumerable<GetProductResponseDto>>
     {
-        private readonly AppDbContext _context;
-        public GetProductHandler(AppDbContext context)
+        private readonly IProductRepository _productRepository;
+
+        public GetProductHandler(IProductRepository productRepository)
         {
-            _context = context;
+            _productRepository = productRepository;
         }
 
         public async Task<IEnumerable<GetProductResponseDto>> Handle(GetProductQuery request, CancellationToken cancellationToken)
         {
-            var products = await _context.Products
-                .AsNoTracking()
-                .Include(x => x.Category)
-                .Include(x => x.Location)
-                .ToListAsync(cancellationToken);
+            var products = await _productRepository.GetProductsWithCategoryAndLocationAsync();
 
             return products.Select(product => new GetProductResponseDto
             {

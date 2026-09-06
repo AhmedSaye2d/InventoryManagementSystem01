@@ -1,40 +1,41 @@
-﻿using Application.DTO.Response;
+using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Locations;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using LocationEntity = Domain.Entities.Product.Location;
 
 namespace Infrastructure.Reposito.Product.Handlers.Location
 {
     public class CreateLocationHandler : IRequestHandler<CreateLocationCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
-        public CreateLocationHandler(AppDbContext context)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public CreateLocationHandler(IUnitOfWork unitOfWork)
         {
-            this._context = context;
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ServicesResponse> Handle(CreateLocationCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var location = await _context.Locations.FirstOrDefaultAsync(x => x.Name.ToLower().Equals(request.locationmodel.Name), cancellationToken: cancellationToken);
-
-                if (location != null)
+                var exists = await _unitOfWork.Locations.ExistsAsync(x => x.Name.ToLower() == request.locationmodel.Name.ToLower());
+                if (exists)
                 {
                     return GeneralDbResponses.ItemAlreadyExist(request.locationmodel.Name);
                 }
-                var data = request.locationmodel.Adapt(new Domain.Entities.Product.Location());
 
-                _context.Locations.Add(data);   
+                var data = request.locationmodel.Adapt(new LocationEntity());
 
-               await _context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Locations.AddAsync(data);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemCreated(request.locationmodel.Name);
             }
             catch (Exception ex)
             {
-                return new ServicesResponse(true,ex.Message);
+                return new ServicesResponse(false, ex.Message);
             }
         }
     }

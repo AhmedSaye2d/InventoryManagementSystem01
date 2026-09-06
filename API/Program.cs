@@ -36,10 +36,38 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// MediatR: scan Application (commands/queries) + Infrastructure (handlers)
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Application.Services.Product.Commands.Products.CreateProductCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Infrastructure.Reposito.Product.Handlers.Products.CreateProductHandler).Assembly);
+});
+
 builder.Services.AddValidatorsFromAssemblyContaining<Application.DTO.Request.Product.Validators.AddLocationRequestDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<Application.DTO.Request.Inventory.Validators.InventoryMovementFilterRequestDtoValidator>();
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Infrastructure.Behaviors.ValidationBehavior<,>));
 
 var app = builder.Build();
+
+// Seed data (Idempotent) - runs on startup, respects Configuration for credentials
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var enableSeed = config.GetValue<bool?>("SeedData:Enabled") ?? true;
+        if (enableSeed)
+        {
+            await Infrastructure.DataAccess.Seed.AppDbSeeder.SeedAsync(app.Services);
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Seeding failed");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -1,25 +1,24 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Order.Commands;
-using Infrastructure.DataAccess;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Reposito.Order
 {
     public class UpdateClientOrderHandler : IRequestHandler<UpdateOrderCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateClientOrderHandler(AppDbContext context)
+        public UpdateClientOrderHandler(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ServicesResponse> Handle(UpdateOrderCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var order = await _context.Orders.FirstOrDefaultAsync(x => x.Id == request.model.OrderId, cancellationToken);
+                var order = await _unitOfWork.Orders.GetByIdAsync(request.model.OrderId);
                 if (order == null)
                 {
                     return new ServicesResponse(false, "Order not found");
@@ -35,8 +34,8 @@ namespace Infrastructure.Reposito.Order
                     order.DeliveryDate = request.model.Delivering.Value;
                 }
 
-                _context.Orders.Update(order);
-                await _context.SaveChangesAsync(cancellationToken);
+                _unitOfWork.Orders.Update(order);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return new ServicesResponse(true, "Order updated successfully");
             }

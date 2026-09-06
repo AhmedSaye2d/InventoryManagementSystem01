@@ -1,39 +1,42 @@
-﻿using Application.DTO.Response;
+using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Products;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using ProductEntity = Domain.Entities.Product.Product;
+
 namespace Infrastructure.Reposito.Product.Handlers.Product
 {
     public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
-        public UpdateProductHandler(AppDbContext context)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UpdateProductHandler(IUnitOfWork unitOfWork)
         {
-            this._context = context;
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ServicesResponse> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var product = await _context.Products.FirstOrDefaultAsync(x => x.Id == request.productmodel.Id, cancellationToken: cancellationToken);
+                var product = await _unitOfWork.Products.GetByIdAsync(request.productmodel.Id);
 
                 if (product == null)
                 {
                     return GeneralDbResponses.ItemNotFound(request.productmodel.Name);
                 }
-                var adapt = request.productmodel.Adapt(new Domain.Entities.Product.Product());
 
-                _context.Products.Update(adapt);
+                var adapt = request.productmodel.Adapt(new ProductEntity());
+                _unitOfWork.Products.Update(adapt);
 
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemUpdated(request.productmodel.Name);
             }
             catch (Exception ex)
             {
-                return new ServicesResponse(true, ex.Message);
+                return new ServicesResponse(false, ex.Message);
             }
         }
     }

@@ -31,9 +31,9 @@ namespace Application.Services.Identity
             return await account.LoginAsAsync(model);
         }
 
-        public Task SaveActivityTracker(ActivityTrackerRequestDto model)
+        public Task SaveActivityTracker(ActivityTrackerRequestDto model, string authenticatedUserId)
         {
-            return account.SaveActityTrackerAsync(model);
+            return account.SaveActityTrackerAsync(model, authenticatedUserId);
         }
 
         public Task SetUPAsync()
@@ -44,6 +44,11 @@ namespace Application.Services.Identity
         public Task<ServicesResponse> UpdateUserAsync(ChangeUserClaimRequestDto model)
         {
             return account.UpdateAsync(model);
+        }
+
+        public Task<IEnumerable<GetUserWithClaimResponsDto>> GetUsersAsync()
+        {
+            return account.GetUserWithClaimAsync();
         }
 
 

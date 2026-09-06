@@ -12,9 +12,10 @@ namespace Application.Services.Identity
         Task<ServicesResponse> CreateUserAsync(CreateUserRequestDto model);
         Task<ServicesResponse> UpdateUserAsync(ChangeUserClaimRequestDto model);
         Task SetUPAsync();
+        Task<IEnumerable<GetUserWithClaimResponsDto>> GetUsersAsync();
         Task<IEnumerable<ActivityTrackerResponseDto>> GetActivitesAsync();
 
-        Task SaveActivityTracker(ActivityTrackerRequestDto model);
+        Task SaveActivityTracker(ActivityTrackerRequestDto model, string authenticatedUserId);
         Task<IEnumerable<IGrouping<DateTime, ActivityTrackerResponseDto>>> GroupActivityTracker();
     }
 }

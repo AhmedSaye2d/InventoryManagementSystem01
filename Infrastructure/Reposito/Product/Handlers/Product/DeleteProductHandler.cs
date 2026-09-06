@@ -1,36 +1,37 @@
-﻿using Application.DTO.Response;
+using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Products;
-using Infrastructure.DataAccess;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Reposito.Product.Handlers.Product
 {
     public class DeleteProductHandler : IRequestHandler<DeleteProductCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
-        public DeleteProductHandler(AppDbContext context)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public DeleteProductHandler(IUnitOfWork unitOfWork)
         {
-            this._context = context;
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ServicesResponse> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var product = await _context.Products.FirstOrDefaultAsync(x => x.Id.Equals(request.Id), cancellationToken: cancellationToken);
+                var product = await _unitOfWork.Products.GetByIdAsync(request.Id);
                 if (product == null)
                 {
                     return GeneralDbResponses.ItemNotFound("Product");
                 }
-                _context.Products.Remove(product);
 
-                await _context.SaveChangesAsync();
+                _unitOfWork.Products.Delete(product);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemDeleted(product.Name);
-
             }
             catch (Exception ex)
             {
-                return new ServicesResponse(true, ex.Message);
+                return new ServicesResponse(false, ex.Message);
             }
         }
     }

@@ -1,37 +1,32 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Categories;
-using Infrastructure.DataAccess;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Reposito.Product.Handlers.Category
 {
     public class DeleteCategoryHandler : IRequestHandler<DeleteCategoryCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public DeleteCategoryHandler(AppDbContext context)
+        public DeleteCategoryHandler(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ServicesResponse> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var category = await _context.Categories
-                    .FirstOrDefaultAsync(x => x.Id.Equals(request.Id), cancellationToken);
+                var category = await _unitOfWork.Categories.GetByIdAsync(request.Id);
 
                 if (category == null)
                 {
                     return GeneralDbResponses.ItemNotFound("Category");
                 }
 
-                _context.Categories.Remove(category);
-                await _context.SaveChangesAsync(cancellationToken);
+                _unitOfWork.Categories.Delete(category);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemDeleted(category.Name);
             }

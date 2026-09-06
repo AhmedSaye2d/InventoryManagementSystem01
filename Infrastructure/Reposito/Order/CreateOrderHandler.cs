@@ -1,28 +1,26 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Order.Commands;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using OrderEntity = Domain.Entities.Order.Order;
 
 namespace Infrastructure.Reposito.Order
 {
     public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CreateOrderHandler(AppDbContext context)
+        public CreateOrderHandler(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ServicesResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var product = await _context.Products
-                    .FirstOrDefaultAsync(x => x.Id == request.ordermodel.ProductId, cancellationToken);
+                var product = await _unitOfWork.Products.GetByIdAsync(request.ordermodel.ProductId);
 
                 if (product == null)
                     return new ServicesResponse(false, "Product not found");
@@ -40,10 +38,10 @@ namespace Infrastructure.Reposito.Order
 
                 // Reduce product quantity
                 product.Quantity -= request.ordermodel.Quantity;
-                _context.Products.Update(product);
+                _unitOfWork.Products.Update(product);
 
-                _context.Orders.Add(data);
-                await _context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Orders.AddAsync(data);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return new ServicesResponse(true, "Order created successfully");
             }

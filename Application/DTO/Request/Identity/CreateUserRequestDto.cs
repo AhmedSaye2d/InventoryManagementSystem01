@@ -11,6 +11,13 @@ namespace Application.DTO.Request.Identity
 
         [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; } = string.Empty;
-        public string Policy { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Role to assign. Allowed: Manager, User only.
+        /// Admin cannot be created via this endpoint (only via Setup).
+        /// Replaces old Policy field to prevent privilege escalation via client-sent policy.
+        /// </summary>
+        [Required(ErrorMessage = "Role is required")]
+        public string Role { get; set; } = string.Empty;
     }
 }

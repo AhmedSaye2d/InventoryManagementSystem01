@@ -1,40 +1,35 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Categories;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using CategoryEntity = Domain.Entities.Product.Category;
 
 namespace Infrastructure.Reposito.Product.Handlers.Category
 {
     public class CreateCategoryHandler : IRequestHandler<CreateCategoryCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CreateCategoryHandler(AppDbContext context)
+        public CreateCategoryHandler(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ServicesResponse> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var category = await _context.Categories
-                    .FirstOrDefaultAsync(x => x.Name.ToLower().Equals(request.Categorymodel.Name.ToLower()), cancellationToken: cancellationToken);
-
-                if (category != null)
+                var exists = await _unitOfWork.Categories.ExistsAsync(x => x.Name.ToLower() == request.Categorymodel.Name.ToLower());
+                if (exists)
                 {
                     return GeneralDbResponses.ItemAlreadyExist(request.Categorymodel.Name);
                 }
 
-                var data = request.Categorymodel.Adapt<Domain.Entities.Product.Category>();
+                var data = request.Categorymodel.Adapt<CategoryEntity>();
 
-                _context.Categories.Add(data);
-                await _context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Categories.AddAsync(data);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemCreated(request.Categorymodel.Name);
             }

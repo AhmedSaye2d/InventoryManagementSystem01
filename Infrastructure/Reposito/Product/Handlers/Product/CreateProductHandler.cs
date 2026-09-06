@@ -1,38 +1,37 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Products;
-using Product = Domain.Entities.Product.Product;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using ProductEntity = Domain.Entities.Product.Product;
+
 namespace Infrastructure.Reposito.Product.Handlers.Products
 {
     public class CreateProductHandler : IRequestHandler<CreateProductCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CreateProductHandler(AppDbContext context)
+        public CreateProductHandler(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ServicesResponse> Handle(CreateProductCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var product = await _context.Products.FirstOrDefaultAsync(x => x.Name == request.productmodel.Name, cancellationToken);
-                if (product != null)
+                var exists = await _unitOfWork.Products.ExistsAsync(x => x.Name == request.productmodel.Name);
+                if (exists)
                 {
                     return GeneralDbResponses.ItemAlreadyExist(request.productmodel.Name);
                 }
-                var data = request.productmodel.Adapt(new Domain.Entities.Product.Product());
 
-                _context.Products.Add(data);
+                var data = request.productmodel.Adapt(new ProductEntity());
 
-                await _context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Products.AddAsync(data);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemCreated(request.productmodel.Name);
-
             }
             catch (Exception ex)
             {

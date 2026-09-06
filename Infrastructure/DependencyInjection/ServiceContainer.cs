@@ -89,6 +89,15 @@ namespace Infrastructure.DependencyInjection
                     policy.RequireAssertion(ctx => ctx.User.HasClaim("MangerUser", "true") || ctx.User.IsInRole("Admin"));
                 });
 
+            // 🔹 Repositories & Unit of Work
+            services.AddScoped(typeof(Application.Interfaces.Repositories.IGenericRepository<>), typeof(Infrastructure.Repositories.GenericRepository<>));
+            services.AddScoped<Application.Interfaces.Repositories.IProductRepository, Infrastructure.Repositories.ProductRepository>();
+            services.AddScoped<Application.Interfaces.Repositories.ICategoryRepository, Infrastructure.Repositories.CategoryRepository>();
+            services.AddScoped<Application.Interfaces.Repositories.ILocationRepository, Infrastructure.Repositories.LocationRepository>();
+            services.AddScoped<Application.Interfaces.Repositories.IOrderRepository, Infrastructure.Repositories.OrderRepository>();
+            services.AddScoped<Application.Interfaces.Repositories.IInventoryMovementRepository, Infrastructure.Repositories.InventoryMovementRepository>();
+            services.AddScoped<Application.Interfaces.Repositories.IUnitOfWork, Infrastructure.UnitOfWork.UnitOfWork>();
+
             // 🔹 Services
             services.AddScoped<IAccount, Account>();
             services.AddScoped<IActivityTracker, ActivityTrackerRepository>();

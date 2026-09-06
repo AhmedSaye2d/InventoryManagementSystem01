@@ -1,27 +1,22 @@
 using Application.DTO.Response.Products;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Queries.Categories;
-using Infrastructure.DataAccess;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Reposito.Product.Handlers.Category
 {
     public class GetCategoryByIdHandler : IRequestHandler<GetCategoryByIdQuery, GetCategoryResponseDto>
     {
-        private readonly AppDbContext _context;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public GetCategoryByIdHandler(AppDbContext context)
+        public GetCategoryByIdHandler(ICategoryRepository categoryRepository)
         {
-            _context = context;
+            _categoryRepository = categoryRepository;
         }
 
         public async Task<GetCategoryResponseDto> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
         {
-            var category = await _context.Categories
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken: cancellationToken);
+            var category = await _categoryRepository.GetByIdAsync(request.Id);
 
             if (category == null) return null!;
 

@@ -1,27 +1,23 @@
 using Application.DTO.Response.Products;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Queries.Categories;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Reposito.Product.Handlers.Category
 {
     public class GetAllCategoryHandler : IRequestHandler<GetAllCategoryQuery, IEnumerable<GetCategoryResponseDto>>
     {
-        private readonly AppDbContext _context;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public GetAllCategoryHandler(AppDbContext context)
+        public GetAllCategoryHandler(ICategoryRepository categoryRepository)
         {
-            _context = context;
+            _categoryRepository = categoryRepository;
         }
 
         public async Task<IEnumerable<GetCategoryResponseDto>> Handle(GetAllCategoryQuery request, CancellationToken cancellationToken)
         {
-            var data = await _context.Categories.AsNoTracking().ToListAsync(cancellationToken);
+            var data = await _categoryRepository.GetAllAsync();
             return data.Adapt<List<GetCategoryResponseDto>>();
         }
     }

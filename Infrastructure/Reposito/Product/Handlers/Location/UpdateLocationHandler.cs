@@ -1,39 +1,41 @@
-﻿using Application.DTO.Response;
+using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Locations;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using LocationEntity = Domain.Entities.Product.Location;
+
 namespace Infrastructure.Reposito.Product.Handlers.Location
 {
     public class UpdateLocationHandler : IRequestHandler<UpdateLocationCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
-        public UpdateLocationHandler(AppDbContext context)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UpdateLocationHandler(IUnitOfWork unitOfWork)
         {
-            this._context = context;
+            _unitOfWork = unitOfWork;
         }
+
         public async Task<ServicesResponse> Handle(UpdateLocationCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var location = await _context.Locations.FirstOrDefaultAsync(x => x.Id.Equals(request.LocationModel.Id), cancellationToken);
+                var location = await _unitOfWork.Locations.GetByIdAsync(request.LocationModel.Id);
                 if (location == null)
                 {
                     return GeneralDbResponses.ItemNotFound(request.LocationModel.Name);
-
                 }
-                var data = request.LocationModel.Adapt(new Domain.Entities.Product.Location());
 
-                _context.Locations.Update(data);
+                var data = request.LocationModel.Adapt(new LocationEntity());
 
-                await _context.SaveChangesAsync(cancellationToken);
+                _unitOfWork.Locations.Update(data);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemUpdated(request.LocationModel.Name);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                return new ServicesResponse(true,ex.Message);
+                return new ServicesResponse(false, ex.Message);
             }
         }
     }

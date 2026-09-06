@@ -1,24 +1,29 @@
 using Application.DTO.Response.Products;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Queries.Products;
-using Infrastructure.DataAccess;
-using LocationEntity = global::Domain.Entities.Product.Location;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Reposito.Product.Handlers.Product
 {
     public class GetProductByIdHandler : IRequestHandler<GetProductByIdQuery, GetProductResponseDto>
     {
-        private readonly AppDbContext _context;
-        public GetProductByIdHandler(AppDbContext context)
+        private readonly IProductRepository _productRepository;
+
+        public GetProductByIdHandler(IProductRepository productRepository)
         {
-            this._context = context;
+            _productRepository = productRepository;
         }
+
         public async Task<GetProductResponseDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
         {
-            var product = await _context.Products.AsNoTracking().Include(x => x.Category).Include(x => x.Location).FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken: cancellationToken);
+            var product = await _productRepository.GetProductWithCategoryAndLocationByIdAsync(request.Id);
+            if (product == null)
+            {
+                return null!;
+            }
+
             return new GetProductResponseDto
             {
-
                 Id = product.Id,
                 Name = product.Name,
                 SerialNumber = product.SerialNumber,
@@ -29,18 +34,17 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
                 DateAdded = product.DateAdd,
                 LocationId = product.LocationId,
                 Quantity = product.Quantity,
-                Location = new GetLocationResponseDto
+                Location = product.Location != null ? new GetLocationResponseDto
                 {
-                    Id = product.LocationId,
+                    Id = product.Location.Id,
                     Name = product.Location.Name
-
-                },
-                Category = new GetCategoryResponseDto
+                } : null,
+                Category = product.Category != null ? new GetCategoryResponseDto
                 {
-                    Id = product.CategoryId,
-                    Name = product.Category.Name,
-                }
+                    Id = product.Category.Id,
+                    Name = product.Category.Name
+                } : null
             };
-        } 
+        }
     }
 }

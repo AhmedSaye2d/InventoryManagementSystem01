@@ -1,30 +1,25 @@
 using Application.DTO.Response;
+using Application.Interfaces.Repositories;
 using Application.Services.Product.Commands.Categories;
-using Infrastructure.DataAccess;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Reposito.Product.Handlers.Category
 {
     public class UpdateCategoryHandler : IRequestHandler<UpdateCategoryCommand, ServicesResponse>
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateCategoryHandler(AppDbContext context)
+        public UpdateCategoryHandler(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ServicesResponse> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var category = await _context.Categories
-                    .FirstOrDefaultAsync(x => x.Id.Equals(request.Categorymodel.Id), cancellationToken);
+                var category = await _unitOfWork.Categories.GetByIdAsync(request.Categorymodel.Id);
 
                 if (category == null)
                 {
@@ -33,8 +28,8 @@ namespace Infrastructure.Reposito.Product.Handlers.Category
 
                 request.Categorymodel.Adapt(category);
 
-                _context.Categories.Update(category);
-                await _context.SaveChangesAsync(cancellationToken);
+                _unitOfWork.Categories.Update(category);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return GeneralDbResponses.ItemUpdated(request.Categorymodel.Name);
             }
