@@ -1,201 +1,286 @@
-# Inventory Management System
+# 📦 Inventory Management System
 
-A backend RESTful API for managing products, categories, locations, orders, and user accounts built with ASP.NET Core 8.0 using Clean Architecture and CQRS patterns.
+A backend Inventory Management System built with **.NET 8** following **Clean Architecture**, **CQRS**, **MediatR**, and modern backend development practices.
 
-## Tech Stack
+> 🚧 **Project Status: Under Development**
+>
+> The system is actively being developed, and new features and improvements are being added continuously.
 
-| Category | Technology |
-|---|---|
-| Runtime | .NET 8.0 |
-| Web Framework | ASP.NET Core Web API |
-| ORM | Entity Framework Core |
-| Database | SQL Server |
-| Auth | ASP.NET Core Identity + JWT Bearer |
-| Mediator | MediatR |
-| Object Mapping | Mapster |
-| Validation | FluentValidation |
-| API Docs | Swashbuckle (Swagger) |
-| Testing | NUnit + Moq |
+---
 
-## Features
+## 🚀 Overview
 
-- **Product Management** - Full CRUD with category & location relations
-- **Category Management** - Full CRUD with product association
-- **Location Management** - Full CRUD
-- **Order Management** - Create, update, cancel orders with stock validation & reporting
-- **Authentication & Authorization** - JWT-based with role & claim policies (Admin, Manager, User)
-- **Activity Tracking** - Logs user operations
-- **Request Logging** - Middleware for HTTP request/response logging
-- **Exception Handling** - Global middleware for structured error responses
-- **Input Validation** - FluentValidation pipeline via MediatR
+The Inventory Management System is designed to manage products, stock operations, inventory movements, and notifications while maintaining a clean and scalable architecture.
 
-## Project Structure
+The main goal of the project is to build a realistic backend system that follows practices commonly used in professional .NET applications.
 
-```
-├── Domain/                  # Entities & domain models
-├── Application/             # Business logic, DTOs, interfaces, CQRS commands & queries
-├── Infrastructure/          # EF Core, repositories, middleware, DI registration
-├── API/                     # Web API host, controllers, Swagger
-├── Testing/                 # Unit tests
-└── Host/                    # Alternate host (unused)
-```
+---
 
-## Getting Started
+## 🛠️ Technologies & Architecture
 
-### Prerequisites
+* **.NET 8**
+* **ASP.NET Core Web API**
+* **C#**
+* **Entity Framework Core**
+* **SQL Server**
+* **Clean Architecture**
+* **CQRS**
+* **MediatR**
+* **Repository Pattern**
+* **Unit of Work Pattern**
+* **SOLID Principles**
+* **FluentValidation**
+* **JWT Authentication**
+* **Role-Based Authorization**
+* **ASP.NET Core Identity**
+* **Serilog**
+* **Swagger / OpenAPI**
+* **Unit Testing**
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- SQL Server (LocalDB, Express, or full instance)
+---
 
-### Setup
+## 🏗️ Architecture
 
-1. **Clone the repository**
+The project follows **Clean Architecture** with separation of concerns between the main layers:
 
-   ```bash
-   git clone https://github.com/your-username/Inventory-Management-System.git
-   ```
-
-2. **Configure the database connection string**
-
-   The connection string is not committed. Set it via User Secrets:
-
-   ```bash
-   cd "API"
-   dotnet user-secrets init
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=.;Database=InventoryDb;Trusted_Connection=True;TrustServerCertificate=True"
-   ```
-
-   Or add it to `API/appsettings.json`:
-
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=.;Database=InventoryDb;Trusted_Connection=True;TrustServerCertificate=True"
-     }
-   }
-   ```
-
-3. **Restore packages**
-
-   ```bash
-   dotnet restore
-   ```
-
-4. **Apply database migrations**
-
-   ```bash
-   dotnet ef database update --project Infrastructure --startup-project API
-   ```
-
-5. **Run the API**
-
-   ```bash
-   dotnet run --project API
-   ```
-
-6. **Access Swagger UI**
-
-   Navigate to `https://localhost:{port}/swagger`
-
-### Seed Identity Data
-
-After running the API, call the setup endpoint to create roles and the default admin user:
-
-```
-POST /api/account/identity/setup
+```text
+InventoryManagementSystem
+│
+├── API
+│   ├── Controllers
+│   ├── Middleware
+│   └── Configuration
+│
+├── Application
+│   ├── Commands
+│   ├── DTOs
+│   ├── Validators
+│   └── Services
+│
+├── Domain
+│   ├── Entities
+│   ├── Enums
+│   └── Interfaces
+│
+├── Infrastructure
+│   ├── DataAccess
+│   ├── Repositories
+│   ├── UnitOfWork
+│   ├── Services
+│   └── Handlers
+│
+└── Testing
 ```
 
-**Default Admin Credentials:**
+### Request Flow
 
-| Field | Value |
-|---|---|
-| Email | `admin@system.com` |
-| Password | `Admin@123456` |
+```text
+HTTP Request
+     ↓
+Controller
+     ↓
+MediatR Command
+     ↓
+Validation
+     ↓
+Command Handler
+     ↓
+Repository / Unit of Work
+     ↓
+Entity Framework Core
+     ↓
+SQL Server
+```
 
-### Authentication
+---
 
-1. Login via `POST /api/account/login` to get a JWT token
-2. Use the token in Swagger via the **Authorize** button, or in requests as:
-   ```
-   Authorization: Bearer <your-token>
-   ```
+## 📋 Current Features
 
-## API Endpoints
+### Product Management
 
-### Account
+* Create Product
+* Get Products
+* Get Product by ID
+* Update Product
+* Delete Product
+* Product Categories
+* Product Locations
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/account/login` | Login & get JWT token | Public |
-| POST | `/api/account/identity/setup` | Seed roles & admin user | Public |
-| POST | `/api/account/create-user` | Create a new user | Admin/Manager |
-| PUT | `/api/account/update-user-claim` | Update user claims/role | Admin/Manager |
-| GET | `/api/account/get-users` | Get all users with claims | Admin/Manager |
+### 📦 Inventory Operations
 
-### Products
+#### Stock-In
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/product` | Create product | Admin/Manager |
-| GET | `/api/product` | Get all products | Authenticated |
-| GET | `/api/product/{id}` | Get product by ID | Authenticated |
-| PUT | `/api/product` | Update product | Admin/Manager |
-| DELETE | `/api/product/{id}` | Delete product | Admin |
+Add stock to a product and record the inventory movement.
 
-### Categories
+#### Stock-Out
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/category` | Create category | Admin/Manager |
-| GET | `/api/category` | Get all categories | Authenticated |
-| GET | `/api/category/{id}` | Get category by ID | Authenticated |
-| GET | `/api/category/with-products/{id}` | Get category with products | Authenticated |
-| PUT | `/api/category` | Update category | Admin/Manager |
-| DELETE | `/api/category/{id}` | Delete category | Admin |
+Remove stock from a product while validating available quantity.
 
-### Locations
+#### Stock Adjustment
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/location` | Create location | Admin/Manager |
-| GET | `/api/location` | Get all locations | Authenticated |
-| GET | `/api/location/{id}` | Get location by ID | Authenticated |
-| PUT | `/api/location` | Update location | Admin/Manager |
-| DELETE | `/api/location/{id}` | Delete location | Admin |
+Increase or decrease stock manually while preventing negative inventory quantities.
 
-### Orders
+### 📊 Inventory Movements
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/order` | Create order (stock deducted) | Authenticated |
-| PUT | `/api/order` | Update order status | Admin/Manager |
-| PUT | `/api/order/cancel` | Cancel order | Authenticated |
-| GET | `/api/order` | Get all orders | Admin/Manager |
-| GET | `/api/order/user/{userId}` | Get orders by user | Authenticated |
-| GET | `/api/order/count` | Get order counts by status | Authenticated |
-| GET | `/api/order/monthly-totals` | Get monthly order totals | Admin/Manager |
-| GET | `/api/order/top-product` | Get most ordered product | Admin/Manager |
+Every stock operation is recorded in `InventoryMovement`.
 
-### Activity Tracker
+The movement keeps information such as:
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| GET | `/api/activity` | Get all activity logs | Admin/Manager |
+* Product
+* Movement Type
+* Quantity
+* Quantity After
+* Location
+* Reference
+* Date
 
-## Roles & Permissions
+This provides an inventory history/audit trail for stock changes.
 
-| Role | Permissions |
-|---|---|
-| **Admin** | Full access: CRUD all resources, manage users, view activity logs |
-| **Manager** | CRUD products/categories/locations, manage orders, create users, view activity logs |
-| **User** | View products/categories/locations, place orders, cancel own orders |
+### 🔔 Low Stock Alerts
 
-## Run Tests
+The system monitors product stock levels using `LowStockThreshold`.
+
+When:
+
+```text
+Product.Quantity <= Product.LowStockThreshold
+```
+
+a low-stock notification can be generated for users with:
+
+* `Admin`
+* `Manager`
+
+The system also prevents duplicate unresolved low-stock notifications.
+
+### 🔐 Authentication & Authorization
+
+The API uses:
+
+* JWT Authentication
+* ASP.NET Core Identity
+* Role-Based Authorization
+
+Different operations can be restricted based on the user's role.
+
+### 🔔 Notifications
+
+Users can retrieve their notifications through the notification API.
+
+Notifications currently include low-stock alerts.
+
+---
+
+## 🧪 Testing
+
+The project includes automated tests for important business scenarios such as:
+
+* Product operations
+* Stock-In
+* Stock-Out
+* Stock Adjustment
+* Insufficient stock
+* Product not found
+* Low-stock notifications
+* Notification duplicate prevention
+* Authorization scenarios
+
+---
+
+## 🔄 Features in Progress
+
+The project is still under active development.
+
+Planned/improving features include:
+
+* [ ] Stock Transfer
+* [ ] Supplier Management
+* [ ] Purchase Orders
+* [ ] Inventory Reports
+* [ ] Advanced Audit Logging
+* [ ] Notification Read / Unread
+* [ ] Additional validation and business rules
+* [ ] Additional automated tests
+* [ ] Performance improvements
+
+> The feature list may change as the project evolves.
+
+---
+
+## 🎯 Project Goals
+
+This project is being developed to practice and demonstrate:
+
+* Building scalable **.NET Web APIs**
+* Applying **Clean Architecture**
+* Implementing **CQRS and MediatR**
+* Applying **Repository and Unit of Work**
+* Designing real-world inventory business logic
+* Implementing authentication and authorization
+* Writing maintainable and testable code
+* Following SOLID principles and separation of concerns
+
+---
+
+## 📌 API Documentation
+
+The API can be explored through **Swagger / OpenAPI** when running the application locally.
+
+Main API areas currently include:
+
+```text
+/api/Product
+/api/Inventory
+/api/Notification
+/api/Auth
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
 
 ```bash
-dotnet test --project Testing
+git clone <repository-url>
 ```
 
-## License
+### 2. Configure the database
 
-This project is open source. See the repository for license details.
+Update the connection string in:
+
+```text
+appsettings.json
+```
+
+### 3. Apply migrations
+
+```bash
+dotnet ef database update
+```
+
+### 4. Run the application
+
+```bash
+dotnet run
+```
+
+### 5. Open Swagger
+
+After running the API, open the Swagger UI to explore the available endpoints.
+
+---
+
+## 👨‍💻 Development Status
+
+This project is **actively under development**.
+
+New inventory features, business rules, tests, and architectural improvements are being added incrementally.
+
+The README will be updated as the system evolves.
+
+---
+
+## 📄 License
+
+This project is currently developed for learning, portfolio, and demonstration purposes.
