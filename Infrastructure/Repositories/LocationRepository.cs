@@ -13,14 +13,15 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<Location>> GetLocationsWithProductsAsync()
         {
-            return await _dbSet
-                .Include(l => l.Products)
-                .ToListAsync();
+           return await _dbSet
+            .AsNoTracking()
+            .Include(l => l.Products)
+            .ToListAsync();
         }
 
         public async Task<Location?> GetLocationWithProductsByIdAsync(Guid id)
         {
-            return await _dbSet
+            return await _dbSet.AsNoTracking()  
                 .Include(l => l.Products)
                 .FirstOrDefaultAsync(l => l.Id == id);
         }

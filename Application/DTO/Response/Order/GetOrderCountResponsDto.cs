@@ -1,6 +1,4 @@
 ﻿namespace Application.DTO.Response.Order
 {
-    public record GetOrderCountResponsDto(int Processing, int Delivered, int Cancelled, int Delivering);
+    public record GetOrderCountResponsDto(int Pending,int Processing, int Delivered, int Delivering ,int Cancelled,int cancel);
 }
-
-

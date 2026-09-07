@@ -1,9 +1,10 @@
-using System.Globalization;
 using Application.DTO.Response.Order;
 using Application.Interfaces.Repositories;
 using Domain.Entities.Order;
 using Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Threading.Channels;
 
 namespace Infrastructure.Repositories
 {
@@ -80,7 +81,9 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<GetOrderCountResponsDto> GetOrderCountReportAsync(bool isAdmin, string? userId)
+        public async Task<GetOrderCountResponsDto> GetOrderCountReportAsync(
+      bool isAdmin,
+      string? userId)
         {
             var query = _dbSet.AsNoTracking();
 
@@ -89,17 +92,40 @@ namespace Infrastructure.Repositories
                 query = query.Where(x => x.ClientId == userId);
             }
 
-            var orders = await query.ToListAsync();
+            var result = await query
+                .GroupBy(x => 1)
+                .Select(g => new GetOrderCountResponsDto(
+                    g.Count(x =>
+                        x.OrderStatus == OrderStatus.Pending),
 
-            int processing = orders.Count(x => string.Equals(x.OrderStatus, OrderStatus.Processing, StringComparison.OrdinalIgnoreCase) || string.Equals(x.OrderStatus, OrderStatus.Pending, StringComparison.OrdinalIgnoreCase));
-            int delivered = orders.Count(x => string.Equals(x.OrderStatus, OrderStatus.Delivered, StringComparison.OrdinalIgnoreCase));
-            int cancelled = orders.Count(x => string.Equals(x.OrderStatus, OrderStatus.Cancelled, StringComparison.OrdinalIgnoreCase) || string.Equals(x.OrderStatus, OrderStatus.cancel, StringComparison.OrdinalIgnoreCase));
-            int delivering = orders.Count(x => string.Equals(x.OrderStatus, OrderStatus.Delivering, StringComparison.OrdinalIgnoreCase));
+                    g.Count(x =>
+                        x.OrderStatus == OrderStatus.Processing),
 
-            return new GetOrderCountResponsDto(processing, delivered, cancelled, delivering);
+                    g.Count(x =>
+                        x.OrderStatus == OrderStatus.Delivered),
+
+                    g.Count(x =>
+                        x.OrderStatus == OrderStatus.Delivering),
+
+                    g.Count(x =>
+                        x.OrderStatus == OrderStatus.Cancelled),
+
+                    g.Count(x =>
+                        x.OrderStatus == OrderStatus.cancel)
+                ))
+                .FirstOrDefaultAsync();
+
+            return result ?? new GetOrderCountResponsDto(
+                Pending: 0,
+                Processing: 0,
+                Delivered: 0,
+                Delivering: 0,
+                Cancelled: 0,
+                cancel: 0
+            );
         }
-
-        public async Task<GetOrderedProductsWithQuantityResponseDto> GetTopOrderedProductAsync(string? userId)
+        public async Task<GetOrderedProductsWithQuantityResponseDto>
+            GetTopOrderedProductAsync(string? userId)
         {
             var query = _dbSet.AsNoTracking();
 
@@ -110,27 +136,39 @@ namespace Infrastructure.Repositories
 
             var topProduct = await query
                 .Join(
-                    _context.Products,
+                    _context.Products.AsNoTracking(),
+
                     order => order.ProductId,
+
                     product => product.Id,
-                    (order, product) => new { product.Name, order.Quantity }
+
+                    (order, product) => new
+                    {
+                        ProductId = product.Id,
+                        ProductName = product.Name,
+                        Quantity = order.Quantity
+                    }
                 )
-                .GroupBy(x => x.Name)
+                .GroupBy(x => new
+                {
+                    x.ProductId,
+                    x.ProductName
+                })
                 .Select(g => new GetOrderedProductsWithQuantityResponseDto
                 {
-                    NameProduct = g.Key,
+                    NameProduct = g.Key.ProductName,
                     QuantityOrdered = g.Sum(x => x.Quantity)
                 })
                 .OrderByDescending(x => x.QuantityOrdered)
                 .FirstOrDefaultAsync();
 
-            return topProduct ?? new GetOrderedProductsWithQuantityResponseDto
-            {
-                NameProduct = "N/A",
-                QuantityOrdered = 0
-            };
+            return topProduct ??
+                new GetOrderedProductsWithQuantityResponseDto
+                {
+                    NameProduct = "N/A",
+                    QuantityOrdered = 0
+                };
         }
-
         public async Task<IEnumerable<GetProductOrderByMonthResponsDto>> GetProductOrderByMonthReportAsync(string? userId)
         {
             var query = _dbSet.AsNoTracking();
