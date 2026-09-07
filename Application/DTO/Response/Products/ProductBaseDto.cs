@@ -20,7 +20,7 @@ namespace Application.DTO.Response.Products
         [Required]
         [Range(1, int.MaxValue)]
         public int Quantity { get; set; }
-        public DateTime DateAdd { get; set; }
+        //public DateTime DateAdd { get; set; }
 
         [Required]
         [DataType(DataType.Currency)]

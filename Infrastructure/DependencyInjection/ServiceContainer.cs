@@ -1,7 +1,7 @@
-using System.Text;
 using Application.Extention.Identity;
 using Application.Interface.ActivityTracker;
 using Application.Interface.Identity;
+using Application.Services.Identity;
 using Infrastructure.DataAccess;
 using Infrastructure.Reposito;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Infrastructure.DependencyInjection
 {
@@ -100,6 +101,7 @@ namespace Infrastructure.DependencyInjection
 
             // 🔹 Services
             services.AddScoped<IAccount, Account>();
+            services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IActivityTracker, ActivityTrackerRepository>();
 
             return services;
