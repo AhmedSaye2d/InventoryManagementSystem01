@@ -23,7 +23,7 @@ namespace Infrastructure.Repositories
                     order => order.ProductId,
                     product => product.Id,
                     (order, product) => new { order, product }
-                )
+               )
                 .Join(
                     _context.Users,
                     op => op.order.ClientId,

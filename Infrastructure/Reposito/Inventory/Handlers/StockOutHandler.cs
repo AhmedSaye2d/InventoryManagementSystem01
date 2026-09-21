@@ -10,10 +10,12 @@ namespace Infrastructure.Reposito.Inventory.Handlers
     public class StockOutHandler : IRequestHandler<StockOutCommand, StockOperationResponseDto>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public StockOutHandler(IUnitOfWork unitOfWork)
+        public StockOutHandler(IUnitOfWork unitOfWork, Application.Interfaces.ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public async Task<StockOperationResponseDto> Handle(StockOutCommand request, CancellationToken cancellationToken)
@@ -72,6 +74,9 @@ namespace Infrastructure.Reposito.Inventory.Handlers
             await _unitOfWork.InventoryMovements.AddAsync(movement);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            await _cacheService.RemoveAsync("products:all");
+            await _cacheService.RemoveAsync($"product:{product.Id}");
 
             return new StockOperationResponseDto
             {

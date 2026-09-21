@@ -9,10 +9,12 @@ namespace Infrastructure.Reposito.Product.Handlers.Category
     public class UpdateCategoryHandler : IRequestHandler<UpdateCategoryCommand, ServicesResponse>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public UpdateCategoryHandler(IUnitOfWork unitOfWork)
+        public UpdateCategoryHandler(IUnitOfWork unitOfWork, Application.Interfaces.ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public async Task<ServicesResponse> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
@@ -30,6 +32,9 @@ namespace Infrastructure.Reposito.Product.Handlers.Category
 
                 _unitOfWork.Categories.Update(category);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                await _cacheService.RemoveAsync("categories:all");
+                await _cacheService.RemoveAsync($"category:{request.Categorymodel.Id}");
 
                 return GeneralDbResponses.ItemUpdated(request.Categorymodel.Name);
             }

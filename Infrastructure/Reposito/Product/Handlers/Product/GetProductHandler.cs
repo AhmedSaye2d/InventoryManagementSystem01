@@ -8,17 +8,27 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
     public class GetProductHandler : IRequestHandler<GetProductQuery, IEnumerable<GetProductResponseDto>>
     {
         private readonly IProductRepository _productRepository;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public GetProductHandler(IProductRepository productRepository)
+        public GetProductHandler(IProductRepository productRepository, Application.Interfaces.ICacheService cacheService)
         {
             _productRepository = productRepository;
+            _cacheService = cacheService;
         }
 
         public async Task<IEnumerable<GetProductResponseDto>> Handle(GetProductQuery request, CancellationToken cancellationToken)
         {
+            var cacheKey = "products:all";
+            var cachedProducts = await _cacheService.GetAsync<IEnumerable<GetProductResponseDto>>(cacheKey);
+            
+            if (cachedProducts != null)
+            {
+                return cachedProducts;
+            }
+
             var products = await _productRepository.GetProductsWithCategoryAndLocationAsync();
 
-            return products.Select(product => new GetProductResponseDto
+            var response = products.Select(product => new GetProductResponseDto
             {
                 Id = product.Id,
                 Name = product.Name,
@@ -40,7 +50,11 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
                     Id = product.Category.Id,
                     Name = product.Category.Name
                 } : null
-            });
+            }).ToList();
+
+            await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+
+            return response;
         }
     }
 }

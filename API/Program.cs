@@ -47,7 +47,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddValidatorsFromAssemblyContaining<Application.DTO.Request.Product.Validators.AddLocationRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<Application.DTO.Request.Inventory.Validators.InventoryMovementFilterRequestDtoValidator>();
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Infrastructure.Behaviors.ValidationBehavior<,>));
-
+builder.Services.AddMemoryCache();
 var app = builder.Build();
 
 // Seed data (Idempotent) - runs on startup, respects Configuration for credentials

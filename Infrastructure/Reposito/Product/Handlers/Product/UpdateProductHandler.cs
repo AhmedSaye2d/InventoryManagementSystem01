@@ -10,10 +10,12 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
     public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, ServicesResponse>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public UpdateProductHandler(IUnitOfWork unitOfWork)
+        public UpdateProductHandler(IUnitOfWork unitOfWork, Application.Interfaces.ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public async Task<ServicesResponse> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
@@ -31,6 +33,9 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
                 _unitOfWork.Products.Update(adapt);
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                await _cacheService.RemoveAsync("products:all");
+                await _cacheService.RemoveAsync($"product:{request.productmodel.Id}");
 
                 return GeneralDbResponses.ItemUpdated(request.productmodel.Name);
             }

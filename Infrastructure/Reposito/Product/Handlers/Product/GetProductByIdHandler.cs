@@ -8,21 +8,30 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
     public class GetProductByIdHandler : IRequestHandler<GetProductByIdQuery, GetProductResponseDto>
     {
         private readonly IProductRepository _productRepository;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public GetProductByIdHandler(IProductRepository productRepository)
+        public GetProductByIdHandler(IProductRepository productRepository, Application.Interfaces.ICacheService cacheService)
         {
             _productRepository = productRepository;
+            _cacheService = cacheService;
         }
 
         public async Task<GetProductResponseDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
         {
+            var cacheKey = $"product:{request.Id}";
+            var cachedProduct = await _cacheService.GetAsync<GetProductResponseDto>(cacheKey);
+            if (cachedProduct != null)
+            {
+                return cachedProduct;
+            }
+
             var product = await _productRepository.GetProductWithCategoryAndLocationByIdAsync(request.Id);
             if (product == null)
             {
                 return null!;
             }
 
-            return new GetProductResponseDto
+            var response = new GetProductResponseDto
             {
                 Id = product.Id,
                 Name = product.Name,
@@ -45,6 +54,9 @@ namespace Infrastructure.Reposito.Product.Handlers.Product
                     Name = product.Category.Name
                 } : null
             };
+
+            await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            return response;
         }
     }
 }

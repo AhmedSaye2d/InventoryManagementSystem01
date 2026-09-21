@@ -8,8 +8,12 @@ namespace Application.Services.Inventory.Queries
     /// </summary>
     public record GetProductInventoryHistoryQuery(
         Guid ProductId,
+
         int PageNumber = 1,
+
         int PageSize = 20,
-        DateTime? DateFrom = null,
+
+        DateTime? DateFrom = null
+        ,
         DateTime? DateTo = null) : IRequest<PagedResponse<InventoryMovementResponseDto>>;
 }

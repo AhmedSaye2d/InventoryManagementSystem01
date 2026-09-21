@@ -38,9 +38,10 @@ namespace Infrastructure.Reposito.Order
 
                 // Reduce product quantity
                 product.Quantity -= request.ordermodel.Quantity;
-                _unitOfWork.Products.Update(product);
 
+                _unitOfWork.Products.Update(product);
                 await _unitOfWork.Orders.AddAsync(data);
+
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 return new ServicesResponse(true, "Order created successfully");

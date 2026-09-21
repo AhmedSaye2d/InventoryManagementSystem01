@@ -8,10 +8,12 @@ namespace Infrastructure.Reposito.Product.Handlers.Location
     public class DeleteLocationHandler : IRequestHandler<DeleteLocationCommand, ServicesResponse>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public DeleteLocationHandler(IUnitOfWork unitOfWork)
+        public DeleteLocationHandler(IUnitOfWork unitOfWork, Application.Interfaces.ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public async Task<ServicesResponse> Handle(DeleteLocationCommand request, CancellationToken cancellationToken)
@@ -27,6 +29,9 @@ namespace Infrastructure.Reposito.Product.Handlers.Location
 
                 _unitOfWork.Locations.Delete(location);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                await _cacheService.RemoveAsync("locations:all");
+                await _cacheService.RemoveAsync($"location:{request.Id}");
 
                 return GeneralDbResponses.ItemDeleted(location.Name);
             }

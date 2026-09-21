@@ -10,10 +10,12 @@ namespace Infrastructure.Reposito.Product.Handlers.Products
     public class CreateProductHandler : IRequestHandler<CreateProductCommand, ServicesResponse>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly Application.Interfaces.ICacheService _cacheService;
 
-        public CreateProductHandler(IUnitOfWork unitOfWork)
+        public CreateProductHandler(IUnitOfWork unitOfWork, Application.Interfaces.ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public async Task<ServicesResponse> Handle(CreateProductCommand request, CancellationToken cancellationToken)
@@ -30,6 +32,8 @@ namespace Infrastructure.Reposito.Product.Handlers.Products
 
                 await _unitOfWork.Products.AddAsync(data);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                await _cacheService.RemoveAsync("products:all");
 
                 return GeneralDbResponses.ItemCreated(request.productmodel.Name);
             }

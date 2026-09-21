@@ -21,25 +21,88 @@ namespace Infrastructure.UnitOfWork
             _context = context;
         }
 
-        public IProductRepository Products =>
-            _products ??= new ProductRepository(_context);
+        public IProductRepository Products
+        {
+            get
+            {
+                if (_products == null)
+                {
+                    _products = new ProductRepository(_context);
+                }
 
-        public ICategoryRepository Categories =>
-            _categories ??= new CategoryRepository(_context);
+                return _products;
+            }
+        }
 
-        public ILocationRepository Locations =>
-            _locations ??= new LocationRepository(_context);
+        public ICategoryRepository Categories
+        {
+            get
+            {
+                if (_categories == null)
+                {
+                    _categories = new CategoryRepository(_context);
+                }
 
-        public IOrderRepository Orders =>
-            _orders ??= new OrderRepository(_context);
+                return _categories;
+            }
+        }
 
-        public IInventoryMovementRepository InventoryMovements =>
-            _inventoryMovements ??= new InventoryMovementRepository(_context);
+        public ILocationRepository Locations
+        {
+            get
+            {
+                if (_locations == null)
+                {
+                    _locations = new LocationRepository(_context);
+                }
 
-        public IGenericRepository<Tracker> ActivityTrackers =>
-            _activityTrackers ??= new GenericRepository<Tracker>(_context);
+                return _locations;
+            }
+        }
 
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public IOrderRepository Orders
+        {
+            get
+            {
+                if (_orders == null)
+                {
+                    _orders = new OrderRepository(_context);
+                }
+
+                return _orders;
+            }
+        }
+
+        public IInventoryMovementRepository InventoryMovements
+        {
+            get
+            {
+                if (_inventoryMovements == null)
+                {
+                    _inventoryMovements =
+                        new InventoryMovementRepository(_context);
+                }
+
+                return _inventoryMovements;
+            }
+        }
+
+        public IGenericRepository<Tracker> ActivityTrackers
+        {
+            get
+            {
+                if (_activityTrackers == null)
+                {
+                    _activityTrackers =
+                        new GenericRepository<Tracker>(_context);
+                }
+
+                return _activityTrackers;
+            }
+        }
+
+        public async Task<int> SaveChangesAsync(
+            CancellationToken cancellationToken = default)
         {
             return await _context.SaveChangesAsync(cancellationToken);
         }

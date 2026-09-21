@@ -104,6 +104,13 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IActivityTracker, ActivityTrackerRepository>();
 
+            // 🔹 Caching
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetConnectionString("RedisCacheUrl");
+            });
+            services.AddScoped<Application.Interfaces.ICacheService, Infrastructure.Caching.RedisCacheService>();
+
             return services;
         }
     }
