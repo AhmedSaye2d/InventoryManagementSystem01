@@ -1,0 +1,17 @@
+**/.dockerignore
+**/.vs
+**/.vscode
+**/.git
+**/bin
+**/obj
+**/node_modules
+**/TestResults
+**/*.user
+**/*.suo
+**/*.log
+**/Thumbs.db
+*.md
+!README.md
+.github/
+.gitignore
+.gitattributes

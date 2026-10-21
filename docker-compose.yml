@@ -1,0 +1,80 @@
+# ──────────────────────────────────────────────────────────────
+# Docker Compose — Local Development
+# Starts API + SQL Server + Redis
+# Usage: docker compose up -d
+# ──────────────────────────────────────────────────────────────
+
+services:
+  # ─── API Service ────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_CONFIGURATION: Release
+    container_name: inventory-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=InventoryDb;User Id=sa;Password=Dev@Password123!;TrustServerCertificate=True
+      - ConnectionStrings__RedisCacheUrl=redis:6379
+      - Jwt__Key=DockerDevSuperSecretKey1234567890123456!
+      - Jwt__Issuer=InventoryApi
+      - Jwt__Audience=InventoryClient
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - inventory-network
+
+  # ─── SQL Server ─────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: inventory-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Dev@Password123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Dev@Password123!" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - inventory-network
+
+  # ─── Redis Cache ────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: inventory-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - inventory-network
+
+volumes:
+  sqlserver-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  inventory-network:
+    driver: bridge

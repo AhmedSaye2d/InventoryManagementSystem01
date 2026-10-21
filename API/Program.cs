@@ -13,11 +13,11 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
+        Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\""
+        Description = "Enter your valid JWT token below."
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -48,6 +48,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Application.DTO.Request.Pro
 builder.Services.AddValidatorsFromAssemblyContaining<Application.DTO.Request.Inventory.Validators.InventoryMovementFilterRequestDtoValidator>();
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Infrastructure.Behaviors.ValidationBehavior<,>));
 builder.Services.AddMemoryCache();
+builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 // Seed data (Idempotent) - runs on startup, respects Configuration for credentials
@@ -85,5 +86,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

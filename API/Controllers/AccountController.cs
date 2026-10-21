@@ -52,7 +52,6 @@ namespace API.Controllers
 
         // POST: api/account/identity/setup - Idempotent bootstrap, AllowAnonymous but safe
         [HttpPost("identity/setup")]
-        [AllowAnonymous]
         public async Task<IActionResult> Setup()
         {
             await _accountService.SetUPAsync();
