@@ -420,7 +420,7 @@ Located under `Testing/`, the test suite verifies core business rules and edge c
 
 Execute tests via CLI:
 ```bash
-dotnet test "Inventory Management System.slnx"
+dotnet test "Inventory Management System.sln"
 ```
 
 ---

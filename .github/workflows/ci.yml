@@ -14,7 +14,7 @@ on:
 
 env:
   DOTNET_VERSION: "8.0.x"
-  SOLUTION_FILE: "Inventory Management System.slnx"
+  SOLUTION_FILE: "Inventory Management System.sln"
   BUILD_CONFIGURATION: Release
 
 # Cancel in-progress runs for the same branch/PR

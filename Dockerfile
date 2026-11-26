@@ -13,14 +13,14 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
 WORKDIR /src
 
 # Copy only project files first for better Docker layer caching
-COPY ["Inventory Management System.slnx", "./"]
+COPY ["Inventory Management System.sln", "./"]
 COPY ["API/API.csproj", "API/"]
 COPY ["Application/Application.csproj", "Application/"]
 COPY ["Domain/Domain.csproj", "Domain/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
-COPY ["Host/Host.csproj", "Host/"]
+COPY ["Testing/Testing.csproj", "Testing/"]
 
-RUN dotnet restore "Inventory Management System.slnx"
+RUN dotnet restore "Inventory Management System.sln"
 
 # ══════════════════════════════════════════════════════════════
 # Stage 2 — Build & Publish
@@ -33,7 +33,7 @@ ARG BUILD_CONFIGURATION=Release
 COPY . .
 
 # Build the solution
-RUN dotnet build "Inventory Management System.slnx" \
+RUN dotnet build "Inventory Management System.sln" \
     -c ${BUILD_CONFIGURATION} \
     --no-restore
 
